@@ -70,7 +70,7 @@ class Board(dict):
 
         if(color not in ("black", "white")): raise InvalidColor
 
-        [action,value] = self.alphaBetaMax(-1000000,+1000000,3,color)
+        [action,value] = self.alphaBeta(-1000000,+1000000,3,color)
         p1 = action[0]          #initial position
         p2 = action[1]          #final position
         self.move(p1,p2)    
@@ -78,14 +78,59 @@ class Board(dict):
 
     def evaluate(self,color):
         val = 0
+        antival = 0
         mobility = 0
 
+        enemy = self.get_enemy(color)
         for coord in self.keys():
             if (self[coord] is not None) and self[coord].color == color: 
                 val += self[coord].weight
+            if (self[coord] is not None) and self[coord].color == enemy: 
+                antival += self[coord].weight    
                 #mobility += len(self.all_possible_moves(color))
 
-        return val + mobility  
+        return val-antival  
+
+    def alphaBeta(self,alpha,beta,depthleft,color):
+        if (depthleft == 0):
+            return [[], self.evaluate(color)]
+
+        enemy = self.get_enemy(color)
+
+        actions = []
+        for coord in self.keys():
+            if (self[coord] is not None) and self[coord].color == color:
+                moves = self[coord].possible_moves(coord)
+                for move in moves:
+                    actions.append([coord,move])
+
+        bestAction = []
+        bestscore = -1000000
+        for action in actions:
+            temp =  deepcopy(self)
+            p1 = action[0]
+            p2 = action[1]
+            temp._do_move(p1,p2)
+            #self._do_move(p1,p2)
+            tt = temp.alphaBetaMin(-beta,-alpha,depthleft - 1,enemy)
+            #tt = self.alphaBetaMin(alpha,beta,depthleft - 1,enemy)
+            score = tt[1]
+            #[[],score] = self.alphaBetaMin(alpha,beta,depthleft - 1,enemy)
+            #self._undo_move(p1,p2)
+
+            if score >= beta:                      #fail-hard beta-cutoff
+                return [action,score]
+
+            if score > bestscore:                      #alpha acts like max in minimax
+                bestscore = score
+                bestAction = action
+
+            if score > alpha:
+                alpha = score                 
+                    
+        return[bestAction,bestscore]    
+
+
 
     def alphaBetaMax(self,alpha,beta,depthleft,color):
         if depthleft == 0:
