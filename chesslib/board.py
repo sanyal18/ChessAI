@@ -81,6 +81,7 @@ class Board(dict):
         antival = 0
         mobility = 0
 
+        color = "black"
         enemy = self.get_enemy(color)
         for coord in self.keys():
             if (self[coord] is not None) and self[coord].color == color: 
@@ -93,7 +94,10 @@ class Board(dict):
 
     def alphaBeta(self,alpha,beta,depthleft,color):
         if (depthleft == 0):
-            return [[], self.evaluate(color)]
+            if(color == "black"):
+                return [[], self.evaluate(color)]
+            else:
+                return [[], -self.evaluate(color)]    
 
         enemy = self.get_enemy(color)
 
@@ -114,7 +118,7 @@ class Board(dict):
             #self._do_move(p1,p2)
             tt = temp.alphaBetaMin(-beta,-alpha,depthleft - 1,enemy)
             #tt = self.alphaBetaMin(alpha,beta,depthleft - 1,enemy)
-            score = tt[1]
+            score = -tt[1]
             #[[],score] = self.alphaBetaMin(alpha,beta,depthleft - 1,enemy)
             #self._undo_move(p1,p2)
 
